@@ -152,9 +152,6 @@ int main() {
     ImGui::CreateContext();
     ImGuiIO &io = ImGui::GetIO();
     (void) io;
-
-
-
     ImGui_ImplGlfw_InitForOpenGL(window, true);
     ImGui_ImplOpenGL3_Init("#version 330 core");
 
@@ -162,10 +159,21 @@ int main() {
     // -----------------------------
     glEnable(GL_DEPTH_TEST);
 
+    // blending
+    glEnable(GL_BLEND);
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
+    //Face cull
+    glEnable(GL_CULL_FACE);
+    glCullFace(GL_FRONT);
+    glFrontFace(GL_CW);
+
+
     // build and compile shaders
     // -------------------------
     Shader ourShader("resources/shaders/2.model_lighting.vs", "resources/shaders/2.model_lighting.fs");
     Shader skyboxShader("resources/shaders/skybox.vs", "resources/shaders/skybox.fs");
+    Shader starShader("resources/shaders/blending.vs", "resources/shaders/blending.fs");
 
     float skyboxVertices[] = {
             // positions
@@ -212,6 +220,30 @@ int main() {
             1.0f, -1.0f,  1.0f
     };
 
+    float transparentVertices[] = {
+            // positions         // texture Coords (swapped y coordinates because texture is flipped upside down)
+            0.0f,  0.5f,  0.0f,  0.0f,  0.0f,
+            0.0f, -0.5f,  0.0f,  0.0f,  1.0f,
+            1.0f, -0.5f,  0.0f,  1.0f,  1.0f,
+
+            0.0f,  0.5f,  0.0f,  0.0f,  0.0f,
+            1.0f, -0.5f,  0.0f,  1.0f,  1.0f,
+            1.0f,  0.5f,  0.0f,  1.0f,  0.0f
+    };
+
+    // transparent VAO
+    unsigned int transparentVAO, transparentVBO;
+    glGenVertexArrays(1, &transparentVAO);
+    glGenBuffers(1, &transparentVBO);
+    glBindVertexArray(transparentVAO);
+    glBindBuffer(GL_ARRAY_BUFFER, transparentVBO);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(transparentVertices), transparentVertices, GL_STATIC_DRAW);
+    glEnableVertexAttribArray(0);
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)0);
+    glEnableVertexAttribArray(1);
+    glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)(3 * sizeof(float)));
+    glBindVertexArray(0);
+
     // skybox VAO
     unsigned int skyboxVAO, skyboxVBO;
     glGenVertexArrays(1, &skyboxVAO);
@@ -232,7 +264,27 @@ int main() {
                     FileSystem::getPath("resources/textures/skybox/back.png")
             };
     unsigned int cubemapTexture = loadCubemap(faces);
+    unsigned int transparentTexture = loadTexture(FileSystem::getPath("resources/textures/star.png").c_str());
 
+    // transparent star locations
+    // --------------------------------
+    vector<glm::vec3> star
+            {
+                    glm::vec3(1.7f, 0.7f, 9.08f),
+                    glm::vec3(7.1f, -0.1f, 16.0f),
+                    glm::vec3(2.4f, 0.7f, 4.27f),
+                    glm::vec3(-10.4f, 0.7f, 10.4f),
+                    glm::vec3(-3.0f, 0.5f, 16.2f),
+                    glm::vec3(-6.45f, 0.15f, 3.36f),
+                    glm::vec3(5.95f, 1.03f, -13.94f),
+                    glm::vec3(-5.28f, 0.34f, -8.06f),
+                    glm::vec3(0.41f, 0.56f, -15.86f),
+                    glm::vec3(8.83f, 0.14f, -23.85f),
+                    glm::vec3(16.51f, 0.12f, -13.04f),
+                    glm::vec3 (0.0f,0.7f,-1.0f)
+            };
+    starShader.use();
+    starShader.setInt("texture1",0);
     skyboxShader.use();
     skyboxShader.setInt("skybox", 0);
 
@@ -252,6 +304,9 @@ int main() {
 
     Model earth("resources/objects/zemlja/Earth.obj");
     earth.SetShaderTextureNamePrefix("material.");
+
+    Model sun("resources/objects/sunce/Earth.obj");
+    sun.SetShaderTextureNamePrefix("material.");
 
     PointLight& pointLight = programState->pointLight;
     pointLight.position = glm::vec3(4.0f, 4.0, 0.0);
@@ -293,6 +348,7 @@ int main() {
 
         // don't forget to enable shader before setting uniforms
         ourShader.use();
+
         pointLight.position = glm::vec3(4.0 * cos(currentFrame), 4.0f, 4.0 * sin(currentFrame));
         ourShader.setVec3("pointLight.position", pointLight.position);
         ourShader.setVec3("pointLight.ambient", pointLight.ambient);
@@ -303,6 +359,12 @@ int main() {
         ourShader.setFloat("pointLight.quadratic", pointLight.quadratic);
         ourShader.setVec3("viewPosition", programState->camera.Position);
         ourShader.setFloat("material.shininess", 32.0f);
+
+        ourShader.setVec3("dirLight.direction", glm::vec3(0.0f, 20.0f, 0.0f));
+        ourShader.setVec3("dirLight.ambient", glm::vec3(0.05f));
+        ourShader.setVec3("dirLight.diffuse", glm::vec3(0.03f));
+        ourShader.setVec3("dirLight.specular", glm::vec3(0.03f));
+
         // view/projection transformations
         glm::mat4 projection = glm::perspective(glm::radians(programState->camera.Zoom),
                                                 (float) SCR_WIDTH / (float) SCR_HEIGHT, 0.1f, 100.0f);
@@ -319,25 +381,45 @@ int main() {
       //  ourModel.Draw(ourShader);
 
         model=glm::mat4 (1.0f);
-        //model = glm::scale(model,glm::vec3(2.0f));
-        model = glm::translate(model,glm::vec3(3.0f,3.0f,3.0f));
+        model = glm::scale(model,glm::vec3(1.2f));
+        model = glm::translate(model,glm::vec3(4.0f,4.0f,4.0f));
         ourShader.setMat4("model",model);
         moon.Draw(ourShader);
 
         model = glm::mat4(1.0f);
-        //model = glm::translate(model,glm::vec3(0.2f,0.5f,0.3f));
-        //model = glm::scale(model,glm::vec3(4.0f));
+        model = glm::translate(model,glm::vec3(sin(currentFrame),0.0f,0.0f));
+        model = glm::scale(model,glm::vec3(0.5f));
         ourShader.setMat4("model",model);
         ship.Draw(ourShader);
 
-        //model=glm::mat4 (1.0f);
-        //ourShader.setMat4("model",model);
-        //astro.Draw(ourShader);
+        model=glm::mat4 (1.0f);
+        model = glm::translate(model,glm::vec3(12.0f,12.0f,12.0f));
+        model = glm::scale(model,glm::vec3(2.0f));
+        ourShader.setMat4("model",model);
+        sun.Draw(ourShader);
 
         model=glm::mat4 (1.0f);
         model = glm::translate(model,glm::vec3(0.2f,2.0f,5.0f));
+        model = glm::scale(model,glm::vec3(1.5f));
         ourShader.setMat4("model",model);
         earth.Draw(ourShader);
+
+        // star
+        glDisable(GL_CULL_FACE);
+        starShader.use();
+        starShader.setMat4("projection", projection);
+        starShader.setMat4("view", view);
+        glBindVertexArray(transparentVAO);
+        glBindTexture(GL_TEXTURE_2D, transparentTexture);
+        for (unsigned int i = 0; i < star.size(); i++)
+        {
+            model = glm::mat4(1.0f);
+            model = glm::translate(model, star[i]);
+            model = glm::scale(model,glm::vec3(2.0f));
+            starShader.setMat4("model", model);
+            glDrawArrays(GL_TRIANGLES, 0, 6);
+        }
+        glEnable(GL_CULL_FACE);
 
         // draw skybox
         glDepthFunc(GL_LEQUAL);  // change depth function so depth test passes when values are equal to depth buffer's content
