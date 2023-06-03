@@ -174,6 +174,7 @@ int main() {
     Shader ourShader("resources/shaders/2.model_lighting.vs", "resources/shaders/2.model_lighting.fs");
     Shader skyboxShader("resources/shaders/skybox.vs", "resources/shaders/skybox.fs");
     Shader starShader("resources/shaders/blending.vs", "resources/shaders/blending.fs");
+    Shader lightShader("resources/shaders/2.model_lighting.vs", "resources/shaders/light.fs");
 
     float skyboxVertices[] = {
             // positions
@@ -270,18 +271,23 @@ int main() {
     // --------------------------------
     vector<glm::vec3> star
             {
-                    glm::vec3(1.7f, 0.7f, 9.08f),
-                    glm::vec3(7.1f, -0.1f, 16.0f),
-                    glm::vec3(2.4f, 0.7f, 4.27f),
+                    glm::vec3(2.7f, 1.7f, 5.08f),
+                    glm::vec3(17.1f, -0.5f, 16.0f),
+                    glm::vec3(4.4f, 0.5f, 5.0f),
                     glm::vec3(-10.4f, 0.7f, 10.4f),
                     glm::vec3(-3.0f, 0.5f, 16.2f),
                     glm::vec3(-6.45f, 0.15f, 3.36f),
-                    glm::vec3(5.95f, 1.03f, -13.94f),
-                    glm::vec3(-5.28f, 0.34f, -8.06f),
-                    glm::vec3(0.41f, 0.56f, -15.86f),
+                    glm::vec3(6.95f, 2.03f, -15.94f),
+                    glm::vec3(-6.81f, 0.9f, -9.06f),
+                    //glm::vec3(0.41f, 0.56f, -15.86f),
                     glm::vec3(8.83f, 0.14f, -23.85f),
-                    glm::vec3(16.51f, 0.12f, -13.04f),
-                    glm::vec3 (0.0f,0.7f,-1.0f)
+                    //glm::vec3(17.51f, 1.12f, -15.04f),
+                    glm::vec3 (0.2f,0.8f,-2.0f),
+                    glm::vec3(-4.28f, 0.34f, -8.06f),
+                    glm::vec3(0.45f, 0.56f, -16.86f),
+                    glm::vec3(8.84f, 0.14f, -25.85f),
+                    glm::vec3(18.51f, 0.12f, -14.04f),
+                    glm::vec3 (0.2f,0.8f,-2.0f)
             };
     starShader.use();
     starShader.setInt("texture1",0);
@@ -348,8 +354,7 @@ int main() {
 
         // don't forget to enable shader before setting uniforms
         ourShader.use();
-
-        pointLight.position = glm::vec3(4.0 * cos(currentFrame), 4.0f, 4.0 * sin(currentFrame));
+        //pointLight.position = glm::vec3(4.0 * cos(currentFrame), 4.0f, 4.0 * sin(currentFrame));
         ourShader.setVec3("pointLight.position", pointLight.position);
         ourShader.setVec3("pointLight.ambient", pointLight.ambient);
         ourShader.setVec3("pointLight.diffuse", pointLight.diffuse);
@@ -382,7 +387,7 @@ int main() {
 
         model=glm::mat4 (1.0f);
         model = glm::scale(model,glm::vec3(1.2f));
-        model = glm::translate(model,glm::vec3(4.0f,4.0f,4.0f));
+        model = glm::translate(model,glm::vec3(-3.0f,4.0f,2.0f));
         ourShader.setMat4("model",model);
         moon.Draw(ourShader);
 
@@ -393,13 +398,13 @@ int main() {
         ship.Draw(ourShader);
 
         model=glm::mat4 (1.0f);
-        model = glm::translate(model,glm::vec3(12.0f,12.0f,12.0f));
-        model = glm::scale(model,glm::vec3(2.0f));
+        model = glm::translate(model,glm::vec3(15.0f,15.0f,15.0f));
+        model = glm::scale(model,glm::vec3(4.0f));
         ourShader.setMat4("model",model);
         sun.Draw(ourShader);
 
         model=glm::mat4 (1.0f);
-        model = glm::translate(model,glm::vec3(0.2f,2.0f,5.0f));
+        model = glm::translate(model,glm::vec3(2.2f,2.2f,5.0f));
         model = glm::scale(model,glm::vec3(1.5f));
         ourShader.setMat4("model",model);
         earth.Draw(ourShader);
@@ -415,7 +420,7 @@ int main() {
         {
             model = glm::mat4(1.0f);
             model = glm::translate(model, star[i]);
-            model = glm::scale(model,glm::vec3(2.0f));
+            model = glm::scale(model,glm::vec3(10.0f));
             starShader.setMat4("model", model);
             glDrawArrays(GL_TRIANGLES, 0, 6);
         }
