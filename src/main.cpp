@@ -294,19 +294,12 @@ int main() {
     skyboxShader.use();
     skyboxShader.setInt("skybox", 0);
 
-    // load models
-    // -----------
-    //Model ourModel("resources/objects/backpack/backpack.obj");
-    //ourModel.SetShaderTextureNamePrefix("material.");
-
+    // models
     Model moon("resources/objects/mesec/uploads_files_3762137_moon.obj");
     moon.SetShaderTextureNamePrefix("material.");
 
     Model ship("resources/objects/brod/equinoxncc72381.obj");
     ship.SetShaderTextureNamePrefix("material.");
-
-   // Model astro("resources/objects/astronaut/Gun_Bot.obj");
-    //astro.SetShaderTextureNamePrefix("material.");
 
     Model earth("resources/objects/zemlja/Earth.obj");
     earth.SetShaderTextureNamePrefix("material.");
@@ -315,14 +308,14 @@ int main() {
     sun.SetShaderTextureNamePrefix("material.");
 
     PointLight& pointLight = programState->pointLight;
-    pointLight.position = glm::vec3(4.0f, 4.0, 0.0);
+    pointLight.position = glm::vec3(15.0f, 15.0, 15.0);
     pointLight.ambient = glm::vec3(0.5, 0.5, 0.5);
     pointLight.diffuse = glm::vec3(0.6, 0.6, 0.6);
     pointLight.specular = glm::vec3(1.0, 1.0, 1.0);
 
     pointLight.constant = 1.0f;
     pointLight.linear = 0.09f;
-    pointLight.quadratic = 0.032f;
+    pointLight.quadratic = 0.0002f;
 
 
     // load textures
@@ -330,8 +323,6 @@ int main() {
 
     // draw in wireframe
     //glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
-
-
 
     // render loop
     // -----------
@@ -345,7 +336,6 @@ int main() {
         // input
         // -----
         processInput(window);
-
 
         // render
         // ------
@@ -365,11 +355,8 @@ int main() {
         lightShader.setMat4("model",model);
         sun.Draw(lightShader);
 
-
-
         // don't forget to enable shader before setting uniforms
         ourShader.use();
-        //pointLight.position = glm::vec3(4.0 * cos(currentFrame), 4.0f, 4.0 * sin(currentFrame));
         ourShader.setVec3("pointLight.position", pointLight.position);
         ourShader.setVec3("pointLight.ambient", pointLight.ambient);
         ourShader.setVec3("pointLight.diffuse", pointLight.diffuse);
@@ -380,27 +367,15 @@ int main() {
         ourShader.setVec3("viewPosition", programState->camera.Position);
         ourShader.setFloat("material.shininess", 32.0f);
 
-//        ourShader.setVec3("dirLight.direction", glm::vec3(0.0f, 20.0f, 0.0f));
-//        ourShader.setVec3("dirLight.ambient", glm::vec3(0.05f));
-//        ourShader.setVec3("dirLight.diffuse", glm::vec3(0.03f));
-//        ourShader.setVec3("dirLight.specular", glm::vec3(0.03f));
-          ourShader.setMat4("projection", projection);
-          ourShader.setMat4("view", view);
-        // view/projection transformations
-       // glm::mat4 projection = glm::perspective(glm::radians(programState->camera.Zoom),
-       //                                         (float) SCR_WIDTH / (float) SCR_HEIGHT, 0.1f, 250.0f);
-        //glm::mat4 view = programState->camera.GetViewMatrix();
-        //ourShader.setMat4("projection", projection);
-        //ourShader.setMat4("view", view);
+       ourShader.setVec3("dirLight.direction", glm::vec3(0.0f, 20.0f, 0.0f));
+       ourShader.setVec3("dirLight.ambient", glm::vec3(0.05f));
+       ourShader.setVec3("dirLight.diffuse", glm::vec3(0.03f));
+       ourShader.setVec3("dirLight.specular", glm::vec3(0.03f));
 
-        // render the loaded model
-        //model = glm::mat4(1.0f); // model matrica
-        //model = glm::translate(model,
-          //                     programState->backpackPosition); // translate it down so it's at the center of the scene
-        //model = glm::scale(model, glm::vec3(programState->backpackScale));    // it's a bit too big for our scene, so scale it down
-       // ourShader.setMat4("model", model);
-      //  ourModel.Draw(ourShader);
+       ourShader.setMat4("projection", projection);
+       ourShader.setMat4("view", view);
 
+       // models Draw
         model=glm::mat4 (1.0f);
         model = glm::scale(model,glm::vec3(1.2f));
         model = glm::translate(model,glm::vec3(-3.0f,4.0f,2.0f));
@@ -412,8 +387,6 @@ int main() {
         model = glm::scale(model,glm::vec3(0.5f));
         ourShader.setMat4("model",model);
         ship.Draw(ourShader);
-
-
 
         model=glm::mat4 (1.0f);
         model = glm::translate(model,glm::vec3(2.2f,2.2f,5.0f));
@@ -452,11 +425,8 @@ int main() {
         glBindVertexArray(0);
         glDepthFunc(GL_LESS); // set depth function back to default
 
-
         if (programState->ImGuiEnabled)
             DrawImGui(programState);
-
-
 
         // glfw: swap buffers and poll IO events (keys pressed/released, mouse moved etc.)
         // -------------------------------------------------------------------------------

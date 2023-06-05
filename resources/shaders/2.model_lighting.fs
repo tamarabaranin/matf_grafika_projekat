@@ -44,9 +44,8 @@ vec3 CalcPointLight(PointLight light, vec3 normal, vec3 fragPos, vec3 viewDir)
     float diff = max(dot(normal, lightDir), 0.0);
     // specular shading
     vec3 reflectDir = reflect(-lightDir, normal);
-   // float spec = pow(max(dot(viewDir, reflectDir), 0.0), material.shininess);
     float spec = 0.0f;
-       //blinn
+    //blinn
     vec3 halfwayDir = normalize(lightDir + viewDir);
     spec = pow(max(dot(normal, halfwayDir), 0.0), material.shininess);
     // attenuation
@@ -83,5 +82,6 @@ void main()
     vec3 normal = normalize(Normal);
     vec3 viewDir = normalize(viewPosition - FragPos);
     vec3 result = CalcPointLight(pointLight, normal, FragPos, viewDir);
+    result += CalcDirLight(dirLight, normal, viewDir);
     FragColor = vec4(result, 1.0);
 }
