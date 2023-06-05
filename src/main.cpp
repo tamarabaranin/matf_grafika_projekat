@@ -352,6 +352,21 @@ int main() {
         glClearColor(programState->clearColor.r, programState->clearColor.g, programState->clearColor.b, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
+        // sun draw
+        lightShader.use();
+        glm::mat4 projection = glm::perspective(glm::radians(programState->camera.Zoom),
+                                                (float) SCR_WIDTH / (float) SCR_HEIGHT, 0.1f, 250.0f);
+        glm::mat4 view = programState->camera.GetViewMatrix();
+        lightShader.setMat4("projection", projection);
+        lightShader.setMat4("view", view);
+        glm::mat4 model=glm::mat4 (1.0f);
+        model = glm::translate(model,glm::vec3(15.0f,15.0f,15.0f));
+        model = glm::scale(model,glm::vec3(4.0f));
+        lightShader.setMat4("model",model);
+        sun.Draw(lightShader);
+
+
+
         // don't forget to enable shader before setting uniforms
         ourShader.use();
         //pointLight.position = glm::vec3(4.0 * cos(currentFrame), 4.0f, 4.0 * sin(currentFrame));
@@ -365,24 +380,25 @@ int main() {
         ourShader.setVec3("viewPosition", programState->camera.Position);
         ourShader.setFloat("material.shininess", 32.0f);
 
-        ourShader.setVec3("dirLight.direction", glm::vec3(0.0f, 20.0f, 0.0f));
-        ourShader.setVec3("dirLight.ambient", glm::vec3(0.05f));
-        ourShader.setVec3("dirLight.diffuse", glm::vec3(0.03f));
-        ourShader.setVec3("dirLight.specular", glm::vec3(0.03f));
-
+//        ourShader.setVec3("dirLight.direction", glm::vec3(0.0f, 20.0f, 0.0f));
+//        ourShader.setVec3("dirLight.ambient", glm::vec3(0.05f));
+//        ourShader.setVec3("dirLight.diffuse", glm::vec3(0.03f));
+//        ourShader.setVec3("dirLight.specular", glm::vec3(0.03f));
+          ourShader.setMat4("projection", projection);
+          ourShader.setMat4("view", view);
         // view/projection transformations
-        glm::mat4 projection = glm::perspective(glm::radians(programState->camera.Zoom),
-                                                (float) SCR_WIDTH / (float) SCR_HEIGHT, 0.1f, 100.0f);
-        glm::mat4 view = programState->camera.GetViewMatrix();
-        ourShader.setMat4("projection", projection);
-        ourShader.setMat4("view", view);
+       // glm::mat4 projection = glm::perspective(glm::radians(programState->camera.Zoom),
+       //                                         (float) SCR_WIDTH / (float) SCR_HEIGHT, 0.1f, 250.0f);
+        //glm::mat4 view = programState->camera.GetViewMatrix();
+        //ourShader.setMat4("projection", projection);
+        //ourShader.setMat4("view", view);
 
         // render the loaded model
-        glm::mat4 model = glm::mat4(1.0f); // model matrica
-        model = glm::translate(model,
-                               programState->backpackPosition); // translate it down so it's at the center of the scene
-        model = glm::scale(model, glm::vec3(programState->backpackScale));    // it's a bit too big for our scene, so scale it down
-        ourShader.setMat4("model", model);
+        //model = glm::mat4(1.0f); // model matrica
+        //model = glm::translate(model,
+          //                     programState->backpackPosition); // translate it down so it's at the center of the scene
+        //model = glm::scale(model, glm::vec3(programState->backpackScale));    // it's a bit too big for our scene, so scale it down
+       // ourShader.setMat4("model", model);
       //  ourModel.Draw(ourShader);
 
         model=glm::mat4 (1.0f);
@@ -397,11 +413,7 @@ int main() {
         ourShader.setMat4("model",model);
         ship.Draw(ourShader);
 
-        model=glm::mat4 (1.0f);
-        model = glm::translate(model,glm::vec3(15.0f,15.0f,15.0f));
-        model = glm::scale(model,glm::vec3(4.0f));
-        ourShader.setMat4("model",model);
-        sun.Draw(ourShader);
+
 
         model=glm::mat4 (1.0f);
         model = glm::translate(model,glm::vec3(2.2f,2.2f,5.0f));
